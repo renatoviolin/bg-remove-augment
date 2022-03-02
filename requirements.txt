@@ -7,3 +7,4 @@ fastapi
 aiofiles
 python-multipart
 skimage
+gdown
