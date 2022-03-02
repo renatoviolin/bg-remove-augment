@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Deep Learning in Action</title>
+    <script src="static/js/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" href="static/css/bootstrap.min.css">
+    <script src="static/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="static/css/styles.css">
+
+</head>
+
+<body>
+    <div class="overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <nav class="navbar navbar-dark bg-primary">
+        <h2> Augment image with different backgrounds - Deep Learning in Action</h2>
+    </nav>
+
+    <div class="container overflow-hidden">
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="col-sm-2 gy-3"></div>
+                <div class="col-sm-8 gy-3">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="file-input">Choose your file</label>
+                            <div class="form-group">
+                                <input type="file" class="form-control-file" id="file-input">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="file-input">Choose your background pictures</label>
+                            <div class="form-group">
+                                <input type="file" class="form-control-file" id="files-background" multiple>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4 gy-3">
+                            <button type="button" class="w-100 btn btn-primary btn-lg" id="btn-submit">Generate</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12 gy-3">
+                            <div class="div-results" id="div-results"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2 gy-3"></div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    $('#btn-submit').on('click', function () {
+        var form_data = new FormData();
+        files_bk = $('#files-background').prop('files')
+
+        form_data.append('file_input', $('#file-input').prop('files')[0]);
+        for (i = 0; i < files_bk.length; i++)
+            form_data.append('files_background', $('#files-background').prop('files')[i]);
+
+        $.ajax({
+            url: '/generate-augmentation',
+            type: "post",
+            data: form_data,
+            enctype: 'multipart/form-data',
+            contentType: false,
+            processData: false,
+            cache: false,
+            beforeSend: function () {
+                $(".overlay").show()
+
+            },
+        }).done(function (jsondata, textStatus, jqXHR) {
+            payload = jsondata
+            console.log(payload)
+            html = ''
+            for (i = 0; i < payload.augmentations.length; i++) {
+                path = payload.augmentations[i]
+                html += `<div class='img-result'> <img src="${path}" style="width: 100%;"/> </div>`
+            }
+            $('#div-results').html(html)
+
+
+            $(".overlay").hide()
+        }).fail(function (jsondata, textStatus, jqXHR) {
+            console.log(jsondata)
+            $(".overlay").hide()
+        });
+    })
+</script>
+
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Deep Learning in Action</title>
+    <script src="static/js/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/before-after-slider@1.0.0/dist/slider.bundle.js"></script>
+    <link rel="stylesheet" href="static/css/bootstrap.min.css">
+    <script src="static/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="static/css/styles.css">
+</head>
+
+<body>
+    <div class="overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <nav class="navbar navbar-dark bg-primary">
+        <h2> Change background - Deep Learning in Action </h2>
+    </nav>
+
+    <div class="container overflow-hidden">
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="col-sm-1 gy-3"></div>
+                <div class="col-sm-4 gy-3">
+                    <span class="result-header">Current Background</span>
+                    <input class="control input-file-hide" type="file" id="input_file" />
+                    <div id="holder" class="holder_default">
+                        <span id="label_drop_here"> Drag your background image here </span>
+                        <img src="" id="image_droped" style="border: 3px dashed #ccc;" class=" hidden" />
+                    </div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-primary" id="btn-clean">Change Background</button>
+                    </div>
+                </div>
+                <div class="col-sm-6 gy-3">
+                    <span class="result-header">Result Image</span>
+                    <div id="holder_result">
+                        <div id="image-comparison"></div>
+                    </div>
+                </div>
+                <div class="col-sm-1 gy-3"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript">
+    slider = new SliderBar({
+        el: '#image-comparison',
+        beforeImg: '{{original_path}}',
+        afterImg: '{{filepath}}',
+        width: "100%",
+        height: "400px",
+        line: true,
+        lineColor: "rgba(0,0,0,0.3)"
+    });
+
+    holder.ondragover = function () {
+        return false;
+    };
+    holder.ondrop = function (e) {
+        this.className = 'hidden';
+        e.preventDefault();
+        file = e.dataTransfer.files[0];
+        var reader = new FileReader();
+        reader.onload = function (event) {
+            document.getElementById('image_droped').className = 'visible'
+            $('#image_droped').attr('src', event.target.result);
+            $('#label_drop_here').hide()
+        }
+        reader.readAsDataURL(file);
+        $("#file").val(file)
+        $($("#file")).trigger('change');
+    };
+
+
+    $('#btn-clean').on('click', function () {
+        var form_data = new FormData();
+        form_data.append('file', file);
+        form_data.append('img_no_bk', '{{img_no_bk}}');
+        $.ajax({
+            url: '/change-bg',
+            type: "post",
+            data: form_data,
+            enctype: 'multipart/form-data',
+            contentType: false,
+            processData: false,
+            cache: false,
+            beforeSend: function () {
+                $(".overlay").show()
+            },
+        }).done(function (jsondata, textStatus, jqXHR) {
+            payload = jsondata
+            $(".overlay").hide()
+
+            new SliderBar({
+                el: '#image-comparison',
+                beforeImg: '{{original_path}}',
+                afterImg: payload.img_with_bk,
+                width: "100%",
+                height: "400px",
+                line: true,
+                lineColor: "rgba(255,0,0,0.3)"
+            });
+
+        }).fail(function (jsondata, textStatus, jqXHR) {
+            console.log(jsondata)
+            $(".overlay").hide()
+        });
+    })
+</script>
+
+</html>
